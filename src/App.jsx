@@ -15,8 +15,9 @@ export default function App() {
     }
   });
 
+
   const [todo, setTodo] = useState({text: ""});
-  function handleInputChange(e) {
+  const  handleInputChange = (e) => {
     setTodo({
       text: e.target.value,
     })
@@ -95,7 +96,7 @@ export default function App() {
         alert("empty todo");
         return
       }
-      
+
      return storeTodos();
     }
 
