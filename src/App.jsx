@@ -5,16 +5,16 @@ export default function App() {
 
   // Add todo 
 
-  const [todos, setTodos] = useState(() => {
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const getTodos = localStorage.getItem("todos");
-      if (getTodos) {
-        return JSON.parse(getTodos)
+      return () => {
+        setTodos(JSON.parse(getTodos));
       }
-      return []
-    }
-  });
-
+    }  
+  },[]);
 
   const [todo, setTodo] = useState({text: ""});
   const  handleInputChange = (e) => {
@@ -24,9 +24,11 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    
+    if (typeof window !== 'undefined') 
+    {
       localStorage.setItem("todos", JSON.stringify(todos));
-    }
+    }  
   }, [todos])
 
   const completeTodo = (id) => {
@@ -51,8 +53,9 @@ export default function App() {
   }
 
   useEffect(() => {
+
       inputRef.current?.focus();
-  },[])
+  },[todos])
 
   useEffect(() => {
     if (editing) {
@@ -88,14 +91,15 @@ export default function App() {
   const handleKeyDown = (e) => {
     if (e.keyCode === 13) {
 
-      if (isEditing) {
-        return updateTodo(editTodo.id, editTodo)
-      }
+      // if (isEditing) {
+      //   return updateTodo(editTodo.id, editTodo)
+      // }
 
-      if (todo.text.length === 0) {
+      if (!todo.text.length) {
         alert("empty todo");
         return
       }
+    
 
      return storeTodos();
     }
@@ -107,7 +111,7 @@ export default function App() {
   }
 
   const updateTodo = (id, updateTodo) => {
-    if (updateTodo.text.length === 0) {
+    if (!updateTodo.text.length) {
       alert("edit empty todo ");
       return 
     }
