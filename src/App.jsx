@@ -5,27 +5,30 @@ export default function App() {
 
   // Add todo 
 
-  const [todos, setTodos] = useState(() => {
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const getTodos = localStorage.getItem("todos");
-      if (getTodos) {
-        return JSON.parse(getTodos)
+      return () => {
+        setTodos(JSON.parse(getTodos));
       }
-      return []
-    }
-  });
+    }  
+  },[]);
 
-  const [todo, setTodo] = useState({});
-  function handleInputChange(e) {
+  const [todo, setTodo] = useState({text: ""});
+  const  handleInputChange = (e) => {
     setTodo({
       text: e.target.value,
     })
   }
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    
+    if (typeof window !== 'undefined') 
+    {
       localStorage.setItem("todos", JSON.stringify(todos));
-    }
+    }  
   }, [todos])
 
   const completeTodo = (id) => {
@@ -44,16 +47,15 @@ export default function App() {
   const inputRef = useRef(null);
   const EditInputRef = useRef(null);
 
-
-
   const editTodos = (todo) => {
     isEditing(true);
     setEditTodo({...todo})
   }
 
   useEffect(() => {
+
       inputRef.current?.focus();
-  },[])
+  },[todos])
 
   useEffect(() => {
     if (editing) {
@@ -68,49 +70,51 @@ export default function App() {
       })
   }
 
+  const storeTodos = () => {
+    setTodos([
+      ...todos,
+        {
+          id : todos.length + 1,
+          ...todo,
+          completed : false,
+        }
+     ])
+    setTodo({text: ""}) 
+  }
+
+  const resetTodo = () => {
+    setTodo({text: ""})
+    setEditTodo({text: ""})
+    isEditing(false)  
+  }
 
   const handleKeyDown = (e) => {
+    if (e.keyCode === 13) {
 
-    if (e.key === 'Enter') {
+      // if (isEditing) {
+      //   return updateTodo(editTodo.id, editTodo)
+      // }
 
-        if (todo.text === "") {
-          alert("todo empty")
-          return 
-        }
-        
-        if (isEditing) {
-          updateTodo(editTodo.id, editTodo)
-          return 
-        }
+      if (!todo.text.length) {
+        alert("empty todo");
+        return
+      }
+    
 
-        setTodos([
-          ...todos,
-            {
-              id : todos.length + 1,
-              ...todo,
-              completed : false,
-            }
-         ])
-      
-      setTodo("") 
+     return storeTodos();
     }
 
-    if (e.key === 'Escape') {
-      setTodo({
-        text: "",
-      })
-      setEditTodo('');
-      isEditing(false)
+    if (e.keyCode === 27) {
+      return resetTodo();
     }
+  
   }
 
   const updateTodo = (id, updateTodo) => {
-
-    if (updateTodo.text === "") {
-      alert("empty todo")
-      return;
+    if (!updateTodo.text.length) {
+      alert("edit empty todo ");
+      return 
     }
-
     const updateTodoItem = todos.map((todo) => {
       return todo.id === id ? updateTodo : todo
     })
@@ -143,7 +147,7 @@ export default function App() {
               {editing ? (
                 <div className="">
                   <div className="flex justify-center">
-                    <input type="text" onKeyDown={handleKeyDown} ref={EditInputRef} name="todo" value={editTodo.text || ''} className="bg-white-200 px-5 w-4/12	py-2 rounded-full outline-none text-black" placeholder="Edit Todo" 
+                    <input type="text" onKeyDown={handleKeyDown} ref={EditInputRef} name="todo" value={editTodo.text} className="bg-white-200 px-5 w-4/12	py-2 rounded-full outline-none text-black" placeholder="Edit Todo" 
                     onChange={handleEditInputChange}/>
                   </div>
                   <small className="flex justify-center mt-2  text-gray-400 ">Todo Save Press Enter Button. Exit Press Escape Button </small>
@@ -153,7 +157,7 @@ export default function App() {
                  
                   <div className="flex justify-center">
                     <input type="text" ref={inputRef} onKeyDown={handleKeyDown}  className="  bg-white-200 px-5 w-4/12	 py-2 rounded-full outline-none text-black" placeholder="Add Todo" 
-                     onChange={handleInputChange} value={todo.text || ''}/>
+                     onChange={handleInputChange} value={todo.text }/>
                   </div>
                   <small className="flex justify-center mt-2  text-gray-400  ">Todo Save Press Enter Button. Exit Press Escape Button </small>
                 </div>
