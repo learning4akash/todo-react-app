@@ -1,11 +1,17 @@
 import { FaRegPenToSquare, FaRegTrashCan } from "react-icons/fa6";
 import { useState, useEffect, useRef } from "react";
+import InputTodo from "./component/InputTodo";
+import ShowTodoList from "./component/ShowTodoList";
 
 export default function App() {
 
   // Add todo 
 
   const [todos, setTodos] = useState([]);
+  const [editing, isEditing] = useState(false);
+  const [editTodo, setEditTodo] = useState({});
+  const inputRef = useRef(null);
+  const EditInputRef = useRef(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -13,8 +19,10 @@ export default function App() {
       return () => {
         setTodos(JSON.parse(getTodos));
       }
-    }  
+    }
+
   },[]);
+
 
   const [todo, setTodo] = useState({text: ""});
   const  handleInputChange = (e) => {
@@ -23,12 +31,19 @@ export default function App() {
     })
   }
 
-  useEffect(() => {
-    
-    if (typeof window !== 'undefined') 
-    {
-      localStorage.setItem("todos", JSON.stringify(todos));
-    }  
+  const handleEditInputChange = (e) => {
+    setEditTodo({
+      ...editTodo,
+      text: e.target.value
+    })
+  } 
+
+  useEffect(() => {  
+    if (typeof window !== 'undefined') {
+      return () => {
+        localStorage.setItem("todos", JSON.stringify(todos));
+      }
+    }
   }, [todos])
 
   const completeTodo = (id) => {
@@ -41,19 +56,12 @@ export default function App() {
     setTodos(completedStatus)
   }
 
-  // Edit Todo 
-  const [editing, isEditing] = useState(false);
-  const [editTodo, setEditTodo] = useState({});
-  const inputRef = useRef(null);
-  const EditInputRef = useRef(null);
-
   const editTodos = (todo) => {
     isEditing(true);
     setEditTodo({...todo})
   }
 
   useEffect(() => {
-
       inputRef.current?.focus();
   },[todos])
 
@@ -62,13 +70,6 @@ export default function App() {
       EditInputRef.current?.focus();
     }
   },[editing])
-
-  const handleEditInputChange = (e) => {
-      setEditTodo({
-        ...editTodo,
-        text: e.target.value
-      })
-  }
 
   const storeTodos = () => {
     setTodos([
@@ -91,16 +92,15 @@ export default function App() {
   const handleKeyDown = (e) => {
     if (e.keyCode === 13) {
 
-      // if (isEditing) {
-      //   return updateTodo(editTodo.id, editTodo)
-      // }
+      if (editing) {
+        return updateTodo(editTodo.id, editTodo)
+      }
 
       if (!todo.text.length) {
         alert("empty todo");
         return
       }
     
-
      return storeTodos();
     }
 
@@ -144,47 +144,18 @@ export default function App() {
               <div className="text-center mb-5">
                   <h1 className="text-3xl font-bold uppercase">Todo List</h1>
               </div>
-              {editing ? (
-                <div className="">
-                  <div className="flex justify-center">
-                    <input type="text" onKeyDown={handleKeyDown} ref={EditInputRef} name="todo" value={editTodo.text} className="bg-white-200 px-5 w-4/12	py-2 rounded-full outline-none text-black" placeholder="Edit Todo" 
-                    onChange={handleEditInputChange}/>
-                  </div>
-                  <small className="flex justify-center mt-2  text-gray-400 ">Todo Save Press Enter Button. Exit Press Escape Button </small>
-                </div>
-              ):(
-                <div className="">
-                 
-                  <div className="flex justify-center">
-                    <input type="text" ref={inputRef} onKeyDown={handleKeyDown}  className="  bg-white-200 px-5 w-4/12	 py-2 rounded-full outline-none text-black" placeholder="Add Todo" 
-                     onChange={handleInputChange} value={todo.text }/>
-                  </div>
-                  <small className="flex justify-center mt-2  text-gray-400  ">Todo Save Press Enter Button. Exit Press Escape Button </small>
-                </div>
+              {editing ? (          
+                <InputTodo inputRef={EditInputRef} handleKeyDown={handleKeyDown} handleInputChange={handleEditInputChange} todo={editTodo} placeholder="Edit Todo"/>
+              ):( 
+               <InputTodo inputRef={inputRef} handleKeyDown={handleKeyDown} handleInputChange={handleInputChange} todo={todo} placeholder="Add Todo"/>
               )}
              
               <ul>
                 <div className="bg-white rounded-lg shadow-lg flex flex-col p-4 m-auto justify-center w-1/3 gap-2 mt-5">
-            
                 <small className="block mb-5 mt-0 text-xl text-gray-500">{remaining()} Todos pending , {completed()} Completed.</small> 
                     { todos.map((todo) => (
-                        todo.completed == false ? (
-                          <li key={todo.id}>
-                            <input disabled={editing} type="checkbox" className="peer w-3 h-3 rounded  dark:border-gray-600"  onChange={() => completeTodo(todo.id)} defaultChecked={todo.completed}/>
-                              <span className=" inline ml-2 peer-checked:line-through peer-checked:text-gray-400 transition-all">
-                                {todo.text}
-                              </span>
-                            
-                              <span className=" flex justify-end -mt-6">
-                                <div>
-                                    <button className=""  onClick={() => editTodos(todo)}><FaRegPenToSquare /></button>
-                                </div>
-                                <div>
-                                  <button className="ml-2" onClick={() => deleteTodo(todo)}><FaRegTrashCan /></button>
-                                </div>
-                              </span>
-                               
-                          </li>
+                        todo.completed == false ? (  
+                          <ShowTodoList key={todo.id} todo={todo} editing={editing} completeTodo={completeTodo} editTodos={editTodos} deleteTodo={deleteTodo}  FaRegPenToSquare={FaRegPenToSquare} FaRegTrashCan={FaRegTrashCan} />
                         ) : ""
 
                     ))}
@@ -192,10 +163,8 @@ export default function App() {
               </ul> 
               
               <div className="bg-white rounded-lg shadow-lg flex flex-col p-4 m-auto justify-center w-1/3 gap-2 mt-5">
-                    <h1></h1>
                     {todos.map((todo) => (
                         todo.completed ? (
-
                             <li key={todo.id} className="list-none">
                               <input type="checkbox" className="peer w-4 h-4"  onChange={() => completeTodo(todo.id)} defaultChecked={todo.completed}/>
                                 <span className=" ml-2 peer-checked:line-through peer-checked:text-gray-400 transition-all">
